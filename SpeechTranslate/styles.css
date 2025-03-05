@@ -1,0 +1,52 @@
+body {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    width: 100vw;
+    margin: 0;
+}
+
+.mic-container {
+    display:inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+
+.speech{
+    display: flex;
+    width: 150px;
+    height: 150px;
+    justify-content: center;
+    align-items: center;
+    background-color: #008ad3;
+    padding: 15px;
+    margin-bottom: 50px;
+    border-radius: 360%;
+    border-style: none;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+img{
+    height: 120px;
+}
+
+.speech:hover {
+    background-color: #0077b9;
+    box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.speech:active {
+    background-color: green;
+    box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+
+.speech.active {
+    background-color: green;
+    box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.4);
+}
+
