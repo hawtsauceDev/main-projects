@@ -3,6 +3,19 @@ let mic = document.querySelector(".speech");
 let micOn = false;
 let mediaRecorder;
 let audioChunks = [];
+let lang = document.querySelector(".lang")
+
+
+const langOptions = ["Ingles", "Francés", "Italiano"]
+
+langOptions.forEach((option, index) => {
+  const newOption = document.createElement("option");
+  newOption.value = index + 1; // Assigning a numeric value
+  newOption.textContent = option;
+  lang.appendChild(newOption);
+});
+
+
 
 async function record() {
   try {
