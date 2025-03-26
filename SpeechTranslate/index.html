@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles.css" />
     <title>Speech Translator</title>
+    <!-- Include the Azure Speech SDK -->
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   </head>
   <body>
     <div class="mic-container">
@@ -14,8 +16,9 @@
       <select class="lang">
         <option value="0">Elige el idioma</option>
       </select>
-      <audio class="playback" controls></audio>
+      <!-- <audio class="playback" controls></audio> -->
     </div>
+
+    <script src="app.js"></script>
   </body>
-  <script src="main.js"></script>
 </html>

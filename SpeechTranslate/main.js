@@ -1,78 +1,116 @@
-let playback = document.querySelector(".playback");
-let mic = document.querySelector(".speech");
-let micOn = false;
-let mediaRecorder;
-let audioChunks = [];
-let lang = document.querySelector(".lang")
+// List of supported target languages
+const targetLanguages = [
+  { code: "en", name: "English" },
+  { code: "fr", name: "French" },
+  { code: "de", name: "German" },
+  { code: "it", name: "Italian" },
+  { code: "ja", name: "Japanese" },
+  { code: "zh-Hans", name: "Chinese (Simplified)" },
+  // Add more languages as needed
+];
 
-
-const langOptions = ["Ingles", "Francés", "Italiano"]
-
-langOptions.forEach((option, index) => {
-  const newOption = document.createElement("option");
-  newOption.value = index + 1; // Assigning a numeric value
-  newOption.textContent = option;
-  lang.appendChild(newOption);
+// Populate the target language dropdown
+const targetLangSelect = document.querySelector(".lang");
+targetLanguages.forEach((lang) => {
+  const option = document.createElement("option");
+  option.value = lang.code;
+  option.textContent = lang.name;
+  targetLangSelect.appendChild(option);
 });
 
+// Speech translation logic
+const speechButton = document.querySelector(".speech");
+const playbackAudio = document.querySelector(".playback");
 
+let recognizer;
 
-async function record() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
+// Function to start recognition
+function startRecognition() {
+  const targetLang = targetLangSelect.value; // Get the selected target language
 
-    mediaRecorder.ondataavailable = (event) => {
-      audioChunks.push(event.data);
-    };
+  const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
+    "4jlVCPyIlzr5NdcadGQI32O4G8TF5RGW7j5U8wkOAfUMR19lNmanJQQJ99BCACYeBjFXJ3w3AAAYACOGS0wM",
+    "eastus"
+  );
+  const translationConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
+    "4jlVCPyIlzr5NdcadGQI32O4G8TF5RGW7j5U8wkOAfUMR19lNmanJQQJ99BCACYeBjFXJ3w3AAAYACOGS0wM",
+    "eastus"
+  );
 
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-      playback.src = URL.createObjectURL(audioBlob); // Use audioPlayback here
-      audioChunks = []; // Clear recorded chunks for the next recording
-    };
+  // Set the source language to Spanish (Spain)
+  translationConfig.speechRecognitionLanguage = "es-ES";
 
+  // Set the target language to the selected language
+  translationConfig.addTargetLanguage(targetLang);
 
-    mediaRecorder.start();
-    console.log("Recording started");
-  } catch (error) {
-    console.error("Error Accessing the microphone:", error);
-    alert(
-      "Microphone access denied. Please allow microphone permisions to record audio"
-    );
+  const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+  recognizer = new SpeechSDK.TranslationRecognizer(
+    translationConfig,
+    audioConfig
+  );
+
+  recognizer.startContinuousRecognitionAsync(
+    () => {
+      console.log("Recognition started. Speak now...");
+    },
+    (error) => {
+      console.error("Recognition failed to start: ", error);
+    }
+  );
+}
+
+// Function to stop recognition and process the result
+function stopRecognition() {
+  if (recognizer) {
+    recognizer.stopContinuousRecognitionAsync(() => {
+      console.log("Recognition stopped.");
+
+      recognizer.recognized = (result) => {
+        if (result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
+          const translatedText = result.translations.get(
+            targetLangSelect.value
+          ); // Get translation in the selected language
+          console.log("Translated Text: ", translatedText);
+
+          // Synthesize the translated text into audio
+          const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
+            "4jlVCPyIlzr5NdcadGQI32O4G8TF5RGW7j5U8wkOAfUMR19lNmanJQQJ99BCACYeBjFXJ3w3AAAYACOGS0wM",
+            "eastus"
+          );
+          const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+          const synthesizer = new SpeechSDK.SpeechSynthesizer(
+            speechConfig,
+            audioConfig
+          );
+
+          synthesizer.speakTextAsync(translatedText, () => {
+            console.log("Translation audio playback complete.");
+          });
+        } else {
+          console.error("Translation failed: ", result.errorDetails);
+        }
+      };
+
+      recognizer.close();
+    });
   }
 }
 
-function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
-    console.log("Recording stopped");
-  }
-}
+// Mouse click functionality
+speechButton.addEventListener("mousedown", startRecognition);
+speechButton.addEventListener("mouseup", stopRecognition);
 
-document.addEventListener("keydown", function (event) {
-  if (event.code === "ControlLeft" && !event.repeat && !micOn) {
-    micOn = true;
-    mic.classList.add("active");
-    record();
+// Left Ctrl key functionality
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Control" && event.code === "ControlLeft") {
+    speechButton.classList.add("active");
+    startRecognition();
   }
 });
 
-document.addEventListener("keyup", function (event) {
-  if (event.code === "ControlLeft" && micOn) {
-    micOn = false;
-    mic.classList.remove("active");
-    stopRecording();
-  }
-});
-
-mic.addEventListener("click", () => {
-  micOn = !micOn;
-  if (micOn) {
-    mic.classList.add("active");
-    record();
-  } else {
-    mic.classList.remove("active");
-    stopRecording();
+document.addEventListener("keyup", (event) => {
+  if (event.key === "Control" && event.code === "ControlLeft") {
+    speechButton.classList.remove("active");
+    stopRecognition();
   }
 });
